@@ -1,0 +1,55 @@
+﻿DATASET sine2: 100000 samples x 3 features, true drift points [20000, 40000, 60000, 80000]
+window = 2000, step = 1000, tau = 0.6, alpha = 0.01, adaptive threshold
+
+[1] ISOLATION FOREST  s(x) = 2^(-E[h(x)]/c(n))   (ifdldd.py line 61)
+    Forest trained on concept C1 only, then every sample scored:
+    C1 samples      0-20000  mean score 0.518   anomalous (s > 0.6):   1.8%
+    C2 samples  20000-40000  mean score 0.599   anomalous (s > 0.6):  58.1%
+    C3 samples  40000-60000  mean score 0.518   anomalous (s > 0.6):   1.8%
+    C4 samples  60000-80000  mean score 0.599   anomalous (s > 0.6):  57.8%
+    C5 samples  80000-100000 mean score 0.517   anomalous (s > 0.6):   1.7%
+    -> new behaviour gets higher scores without any labels.
+
+[2] SLIDING-WINDOW ANOMALY COUNT  D_k = #{x in window : s(x) > 0.6}   (line 68)
+    98 windows; D_k around each candidate (>> = candidate):
+       window  16 samples  17000-19000  D =   34   D_k - D_k-1 =   -22   threshold =   46.4
+       window  17 samples  18000-20000  D =   50   D_k - D_k-1 =   +16   threshold =   44.8
+    >> window  18 samples  19000-21000  D =  601   D_k - D_k-1 =  +551   threshold =   48.3
+
+       window  36 samples  37000-39000  D =   54   D_k - D_k-1 =   +27   threshold =   53.7
+       window  37 samples  38000-40000  D =   31   D_k - D_k-1 =   -23   threshold =   57.1
+    >> window  38 samples  39000-41000  D =  559   D_k - D_k-1 =  +528   threshold =   55.8
+
+       window  56 samples  57000-59000  D =   52   D_k - D_k-1 =   +17   threshold =   44.1
+       window  57 samples  58000-60000  D =   36   D_k - D_k-1 =   -16   threshold =   45.3
+    >> window  58 samples  59000-61000  D =  398   D_k - D_k-1 =  +362   threshold =   44.4
+
+       window  76 samples  77000-79000  D =   45   D_k - D_k-1 =    -2   threshold =   46.1
+       window  77 samples  78000-80000  D =   53   D_k - D_k-1 =    +8   threshold =   43.8
+    >> window  78 samples  79000-81000  D =  571   D_k - D_k-1 =  +518   threshold =   43.9
+
+[3] CANDIDATE DRIFT  when D_k - D_k-1 > threshold   (line 74)
+    window at  19000: jump +551 > threshold 48.3 -> candidate
+    window at  39000: jump +528 > threshold 55.8 -> candidate
+    window at  59000: jump +362 > threshold 44.4 -> candidate
+    window at  79000: jump +518 > threshold 43.9 -> candidate
+
+[4] T-TEST VERIFICATION  one-sided Welch t-test on scores, best split m   (lines 35-49, 78)
+    candidate  19000: split at  20000  mean before 0.522  after 0.598  t =   56.73  p = 0.0e+00  -> CONFIRMED
+    candidate  39000: split at  40000  mean before 0.521  after 0.598  t =   56.44  p = 0.0e+00  -> CONFIRMED
+    candidate  59000: split at  60000  mean before 0.516  after 0.587  t =   51.72  p = 0.0e+00  -> CONFIRMED
+    candidate  79000: split at  80000  mean before 0.517  after 0.597  t =   52.78  p = 0.0e+00  -> CONFIRMED
+
+[5] CONFIRMED DRIFT POINTS   (line 85)
+    detected  20000   nearest true drift  20000   error +0 samples
+    detected  40000   nearest true drift  40000   error +0 samples
+    detected  60000   nearest true drift  60000   error +0 samples
+    detected  80000   nearest true drift  80000   error +0 samples
+    TP 4  FP 0  FN 0  mean delay 0.0
+
+[6] BENEFIT OF THE T-TEST LAYER (same run, verification switched off)
+    detection layer only : TP 4  FP 0  FN 0  mean |error| 0 samples
+    with t-test (IF-DLDD): TP 4  FP 0  FN 0  mean |error| 0 samples
+    -> 0 candidate(s) rejected as noise; drift point located at the t-test split m instead of a window boundary.
+
+figure -> E:\Vrishank\Vrishank\NITK\Sem_7\IoT\MiniProject\results\explain_sine2.png

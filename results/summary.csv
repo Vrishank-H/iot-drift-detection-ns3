@@ -1,0 +1,19 @@
+dataset,method,n,window,step,TP,FP,FN,Delay,candidates,us_per_sample,model_kB,F1
+ns3-iot,Detection layer only (thr=15),31485,300,150,3,3,1,0.3333333333333333,6,1459.8,537.0,0.706
+ns3-iot,IF-DLDD paper (tuned thr=15),31485,300,150,4,1,0,0.0,6,1496.2,519.8,0.964
+ns3-iot,IF-DLDD + adaptive thr (ours),31485,300,150,4,1,0,0.0,6,1541.4,519.8,0.964
+cic-ids2017,Detection layer only (thr=32),100000,1600,1300,3,4,1,1233.3333333333333,7,217.7,674.9,0.682
+cic-ids2017,IF-DLDD paper (tuned thr=32),100000,1600,1300,3,2,1,0.3333333333333333,7,190.0,652.2,0.789
+cic-ids2017,IF-DLDD + adaptive thr (ours),100000,1600,1300,3,0,1,0.0,3,195.8,671.6,0.857
+sea,Detection layer only (thr=20),60000,1000,600,2,0,1,4300.0,2,454.9,944.0,0.714
+sea,IF-DLDD paper (tuned thr=20),60000,1000,600,2,1,1,51.0,6,449.5,947.6,0.754
+sea,IF-DLDD + adaptive thr (ours),60000,1000,600,2,0,1,0.0,2,420.0,888.4,0.8
+stagger,Detection layer only (thr=100),100000,2000,1000,2,0,0,499.0,2,258.7,249.0,0.87
+stagger,IF-DLDD paper (tuned thr=100),100000,2000,1000,2,0,0,0.5,2,249.9,249.0,1.0
+stagger,IF-DLDD + adaptive thr (ours),100000,2000,1000,2,1,0,1.5,3,249.2,249.1,0.93
+sine1,Detection layer only (thr=40),100000,2000,1200,4,1,0,0.0,5,253.8,917.3,0.964
+sine1,IF-DLDD paper (tuned thr=40),100000,2000,1200,4,0,0,0.0,4,196.4,918.1,1.0
+sine1,IF-DLDD + adaptive thr (ours),100000,2000,1200,4,0,0,0.0,4,196.9,918.1,1.0
+sine2,Detection layer only (thr=40),100000,2000,1000,4,0,0,0.0,4,252.2,942.6,1.0
+sine2,IF-DLDD paper (tuned thr=40),100000,2000,1000,4,0,0,0.0,4,314.3,942.6,1.0
+sine2,IF-DLDD + adaptive thr (ours),100000,2000,1000,4,0,0,0.0,4,274.4,942.6,1.0

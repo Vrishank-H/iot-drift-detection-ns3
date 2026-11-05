@@ -1,0 +1,40 @@
+﻿DATASET sea: 60000 samples x 4 features, true drift points [15000, 30000, 45000]
+window = 1000, step = 600, tau = 0.6, alpha = 0.01, adaptive threshold
+
+[1] ISOLATION FOREST  s(x) = 2^(-E[h(x)]/c(n))   (ifdldd.py line 61)
+    Forest trained on concept C1 only, then every sample scored:
+    C1 samples      0-15000  mean score 0.513   anomalous (s > 0.6):   3.5%
+    C2 samples  15000-30000  mean score 0.515   anomalous (s > 0.6):   3.4%
+    C3 samples  30000-45000  mean score 0.512   anomalous (s > 0.6):   3.3%
+    C4 samples  45000-60000  mean score 0.518   anomalous (s > 0.6):   4.3%
+    -> new behaviour gets higher scores without any labels.
+
+[2] SLIDING-WINDOW ANOMALY COUNT  D_k = #{x in window : s(x) > 0.6}   (line 68)
+    98 windows; D_k around each candidate (>> = candidate):
+       window  45 samples  27600-28600  D =   36   D_k - D_k-1 =    -4   threshold =   25.1
+       window  46 samples  28200-29200  D =   30   D_k - D_k-1 =    -6   threshold =   25.3
+    >> window  47 samples  28800-29800  D =   59   D_k - D_k-1 =   +29   threshold =   23.9
+
+       window  71 samples  43200-44200  D =   34   D_k - D_k-1 =    -9   threshold =   28.3
+       window  72 samples  43800-44800  D =   27   D_k - D_k-1 =    -7   threshold =   27.1
+    >> window  73 samples  44400-45400  D =   69   D_k - D_k-1 =   +42   threshold =   26.9
+
+[3] CANDIDATE DRIFT  when D_k - D_k-1 > threshold   (line 74)
+    window at  28800: jump +29 > threshold 23.9 -> candidate
+    window at  44400: jump +42 > threshold 26.9 -> candidate
+
+[4] T-TEST VERIFICATION  one-sided Welch t-test on scores, best split m   (lines 35-49, 78)
+    candidate  28800: split at  29187  mean before 0.517  after 0.522  t =    2.37  p = 8.9e-03  -> CONFIRMED
+    candidate  44400: split at  44851  mean before 0.515  after 0.527  t =    5.43  p = 3.6e-08  -> CONFIRMED
+
+[5] CONFIRMED DRIFT POINTS   (line 85)
+    detected  29187   nearest true drift  30000   error -813 samples
+    detected  44851   nearest true drift  45000   error -149 samples
+    TP 2  FP 0  FN 1  mean delay 0.0
+
+[6] BENEFIT OF THE T-TEST LAYER (same run, verification switched off)
+    detection layer only : TP 1  FP 0  FN 2  mean |error| 10267 samples
+    with t-test (IF-DLDD): TP 2  FP 0  FN 1  mean |error| 5050 samples
+    -> 0 candidate(s) rejected as noise; drift point located at the t-test split m instead of a window boundary.
+
+figure -> E:\Vrishank\Vrishank\NITK\Sem_7\IoT\MiniProject\results\explain_sea.png

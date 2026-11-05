@@ -1,0 +1,78 @@
+﻿DATASET ns3-iot: 31485 samples x 10 features, true drift points [2399, 9225, 15833, 18783]
+window = 300, step = 150, tau = 0.6, alpha = 0.01, adaptive threshold
+
+[1] ISOLATION FOREST  s(x) = 2^(-E[h(x)]/c(n))   (ifdldd.py line 61)
+    Forest trained on concept C1 only, then every sample scored:
+    C1 samples      0-2399   mean score 0.496   anomalous (s > 0.6):   8.5%
+    C2 samples   2399-9225   mean score 0.605   anomalous (s > 0.6):  61.6%
+    C3 samples   9225-15833  mean score 0.623   anomalous (s > 0.6):  66.4%
+    C4 samples  15833-18783  mean score 0.526   anomalous (s > 0.6):  23.7%
+    C5 samples  18783-31485  mean score 0.628   anomalous (s > 0.6):  81.0%
+    by traffic type:
+      BENIGN             mean score 0.497   anomalous:   8.5%
+      Bot-C&C            mean score 0.567   anomalous:   9.7%
+      BruteForce-SSH     mean score 0.664   anomalous:  90.7%
+      BruteForce-Telnet  mean score 0.664   anomalous:  91.2%
+      DDoS               mean score 0.705   anomalous: 100.0%
+      DoS                mean score 0.695   anomalous: 100.0%
+      ICMP-unreachable   mean score 0.683   anomalous: 100.0%
+      PortScan           mean score 0.625   anomalous: 100.0%
+      WebAttack          mean score 0.677   anomalous: 100.0%
+    -> new behaviour gets higher scores without any labels.
+
+[2] SLIDING-WINDOW ANOMALY COUNT  D_k = #{x in window : s(x) > 0.6}   (line 68)
+    207 windows; D_k around each candidate (>> = candidate):
+       window  12 samples   1950-2250   D =   26   D_k - D_k-1 =    -6   threshold =   15.7
+       window  13 samples   2100-2400   D =   22   D_k - D_k-1 =    -4   threshold =   15.3
+    >> window  14 samples   2250-2550   D =  110   D_k - D_k-1 =   +88   threshold =   14.4
+
+       window  57 samples   8700-9000   D =   30   D_k - D_k-1 =    -6   threshold =   20.2
+       window  58 samples   8850-9150   D =   39   D_k - D_k-1 =    +9   threshold =   19.3
+    >> window  59 samples   9000-9300   D =   89   D_k - D_k-1 =   +50   threshold =   21.2
+
+       window  80 samples  12150-12450  D =   33   D_k - D_k-1 =    +1   threshold =   15.6
+       window  81 samples  12300-12600  D =   37   D_k - D_k-1 =    +4   threshold =   15.3
+    >> window  82 samples  12450-12750  D =   54   D_k - D_k-1 =   +17   threshold =   14.9
+
+       window  91 samples  13800-14100  D =   31   D_k - D_k-1 =    -6   threshold =   13.9
+       window  92 samples  13950-14250  D =   29   D_k - D_k-1 =    -2   threshold =   13.1
+    >> window  93 samples  14100-14400  D =   50   D_k - D_k-1 =   +21   threshold =   11.9
+
+       window 101 samples  15300-15600  D =   39   D_k - D_k-1 =    -5   threshold =   16.5
+       window 102 samples  15450-15750  D =   34   D_k - D_k-1 =    -5   threshold =   16.2
+    >> window 103 samples  15600-15900  D =   58   D_k - D_k-1 =   +24   threshold =   15.4
+
+       window 121 samples  18300-18600  D =   42   D_k - D_k-1 =   +10   threshold =   20.6
+       window 122 samples  18450-18750  D =   34   D_k - D_k-1 =    -8   threshold =   21.4
+    >> window 123 samples  18600-18900  D =  103   D_k - D_k-1 =   +69   threshold =   21.2
+
+[3] CANDIDATE DRIFT  when D_k - D_k-1 > threshold   (line 74)
+    window at   2250: jump +88 > threshold 14.4 -> candidate
+    window at   9000: jump +50 > threshold 21.2 -> candidate
+    window at  12450: jump +17 > threshold 14.9 -> candidate
+    window at  14100: jump +21 > threshold 11.9 -> candidate
+    window at  15600: jump +24 > threshold 15.4 -> candidate
+    window at  18600: jump +69 > threshold 21.2 -> candidate
+
+[4] T-TEST VERIFICATION  one-sided Welch t-test on scores, best split m   (lines 35-49, 78)
+    candidate   2250: split at   2399  mean before 0.500  after 0.603  t =   14.01  p = 1.1e-32  -> CONFIRMED
+    candidate   9000: split at   9225  mean before 0.469  after 0.634  t =   17.74  p = 6.0e-34  -> CONFIRMED
+    candidate  12450: split at  12321  mean before 0.448  after 0.469  t =    2.48  p = 6.8e-03  -> CONFIRMED
+    candidate  14100: split at  14313  mean before 0.463  after 0.489  t =    2.09  p = 1.9e-02  -> REJECTED (noise)
+    candidate  15600: split at  15830  mean before 0.467  after 0.561  t =    9.74  p = 1.4e-16  -> CONFIRMED
+    candidate  18600: split at  18783  mean before 0.498  after 0.599  t =   13.51  p = 4.3e-29  -> CONFIRMED
+
+[5] CONFIRMED DRIFT POINTS   (line 85)
+    detected   2399   nearest true drift   2399   error +0 samples
+    detected   9225   nearest true drift   9225   error +0 samples
+    detected  12321   nearest true drift   9225   error +3096 samples
+    detected  15830   nearest true drift  15833   error -3 samples
+    detected  18783   nearest true drift  18783   error +0 samples
+    TP 4  FP 1  FN 0  mean delay 0.0
+
+[6] BENEFIT OF THE T-TEST LAYER (same run, verification switched off)
+    detection layer only : TP 4  FP 5  FN 0  mean |error| 44 samples
+    with t-test (IF-DLDD): TP 4  FP 1  FN 0  mean |error| 1 samples
+    -> 1 candidate(s) rejected as noise; drift point located at the t-test split m instead of a window boundary.
+
+figure -> E:\Vrishank\Vrishank\NITK\Sem_7\IoT\MiniProject\results\explain_ns3-iot.png

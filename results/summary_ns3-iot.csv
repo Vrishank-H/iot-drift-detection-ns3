@@ -1,0 +1,4 @@
+dataset,method,n,window,step,TP,FP,FN,Delay,candidates,us_per_sample,model_kB,F1
+ns3-iot,Detection layer only (thr=15),31485,300,150,3,3,1,0.3333333333333333,6,1422.8,537.0,0.706
+ns3-iot,IF-DLDD paper (tuned thr=15),31485,300,150,4,1,0,0.0,6,1469.5,519.8,0.964
+ns3-iot,IF-DLDD + adaptive thr (ours),31485,300,150,4,1,0,0.0,6,1347.0,519.8,0.964

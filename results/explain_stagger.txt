@@ -1,0 +1,46 @@
+﻿DATASET stagger: 100000 samples x 4 features, true drift points [33334, 66668]
+window = 2000, step = 1000, tau = 0.6, alpha = 0.01, adaptive threshold
+
+[1] ISOLATION FOREST  s(x) = 2^(-E[h(x)]/c(n))   (ifdldd.py line 61)
+    Forest trained on concept C1 only, then every sample scored:
+    C1 samples      0-33334  mean score 0.555   anomalous (s > 0.6):   7.2%
+    C2 samples  33334-66668  mean score 0.575   anomalous (s > 0.6):  18.7%
+    C3 samples  66668-100000 mean score 0.580   anomalous (s > 0.6):  14.7%
+    -> new behaviour gets higher scores without any labels.
+
+[2] SLIDING-WINDOW ANOMALY COUNT  D_k = #{x in window : s(x) > 0.6}   (line 68)
+    98 windows; D_k around each candidate (>> = candidate):
+       window  27 samples  28000-30000  D =  129   D_k - D_k-1 =    -9   threshold =   78.8
+       window  28 samples  29000-31000  D =  136   D_k - D_k-1 =    +7   threshold =   64.4
+    >> window  29 samples  30000-32000  D =  213   D_k - D_k-1 =   +77   threshold =   40.0
+
+       window  29 samples  30000-32000  D =  213   D_k - D_k-1 =   +77   threshold =   40.0
+       window  30 samples  31000-33000  D =  217   D_k - D_k-1 =    +4   threshold =  100.0
+    >> window  31 samples  32000-34000  D =  414   D_k - D_k-1 =  +197   threshold =  100.0
+
+       window  63 samples  64000-66000  D =    0   D_k - D_k-1 =    +0   threshold =   87.1
+       window  64 samples  65000-67000  D =    0   D_k - D_k-1 =    +0   threshold =   87.1
+    >> window  65 samples  66000-68000  D =  641   D_k - D_k-1 =  +641   threshold =   87.1
+
+[3] CANDIDATE DRIFT  when D_k - D_k-1 > threshold   (line 74)
+    window at  30000: jump +77 > threshold 40.0 -> candidate
+    window at  32000: jump +197 > threshold 100.0 -> candidate
+    window at  66000: jump +641 > threshold 87.1 -> candidate
+
+[4] T-TEST VERIFICATION  one-sided Welch t-test on scores, best split m   (lines 35-49, 78)
+    candidate  30000: split at  28787  mean before 0.552  after 0.554  t =    2.39  p = 8.5e-03  -> CONFIRMED
+    candidate  32000: split at  33337  mean before 0.554  after 0.581  t =   22.17  p = 2.8e-88  -> CONFIRMED
+    candidate  66000: split at  66667  mean before 0.550  after 0.588  t =   26.95  p = 6.9e-131  -> CONFIRMED
+
+[5] CONFIRMED DRIFT POINTS   (line 85)
+    detected  28787   nearest true drift  33334   error -4547 samples
+    detected  33337   nearest true drift  33334   error +3 samples
+    detected  66667   nearest true drift  66668   error -1 samples
+    TP 2  FP 1  FN 0  mean delay 1.5
+
+[6] BENEFIT OF THE T-TEST LAYER (same run, verification switched off)
+    detection layer only : TP 2  FP 1  FN 0  mean |error| 499 samples
+    with t-test (IF-DLDD): TP 2  FP 1  FN 0  mean |error| 2 samples
+    -> 0 candidate(s) rejected as noise; drift point located at the t-test split m instead of a window boundary.
+
+figure -> E:\Vrishank\Vrishank\NITK\Sem_7\IoT\MiniProject\results\explain_stagger.png
